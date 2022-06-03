@@ -4,8 +4,7 @@ import * as ejs from "ejs";
 import * as chery from "cheerio";
 import axios, { AxiosResponse } from "axios";
 
-import init, { select, insert, update, remove, createFile } from "./db";
-import { DBform } from "./db";
+import init, { select, insert, remove } from "./db";
 
 //#1. 서버 기본 설정 입니다.
 //익스프레스 객체 입니다.
@@ -19,7 +18,7 @@ app.set("view engine", "html");
 //#3. 데이터베이스를 설정 합니다.
 init();
 
-//#3. post 파라미터 파싱부분 입니다.
+//#4. post 파라미터 파싱부분 입니다.
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
@@ -27,30 +26,13 @@ app.use(
   })
 );
 
-//#4. 화면 페이지로 이동시킵니다.
-app.all("/", (req: express.Request, res: express.Response) => {
-  res.render("index.html", { title: "Welcome" });
-});
-
-//#8. 서버를 실행 합니다.
-app.listen(4885, () => {
-  console.log("실행중");
-});
-
-//URL 분석요청 입니다.
+//#5. URL 분석요청 입니다.
 app.all("/data/study", (req: express.Request, res: express.Response) => {
   let { url, node, type = "get" } = req.body;
-  console.log(url, node, type);
-  url = url.toString();
-  node = node.toString();
-  type = type.toString();
-  console.log(url, node, type);
   axios
     .request({ url: url, method: type })
     .then((response: AxiosResponse) => {
-      //console.log(response.data);
       const $ = chery.load(response.data);
-
       if (node) {
         let text = "";
         $(node)
@@ -66,4 +48,43 @@ app.all("/data/study", (req: express.Request, res: express.Response) => {
     .catch((err) => {
       console.log(err, err.response);
     });
+});
+
+//#6. 저장된 분석데이터를 db로받아서 전달 합니다.
+app.all("/data/getList", (req: express.Request, res: express.Response) => {
+  select((error, result) => {
+    res.send({ result: JSON.stringify(result) });
+  });
+});
+
+//#7. 분석결과를 저장합니다.
+app.all("/data/saveResult", (req: express.Request, res: express.Response) => {
+  let { url, node, type, ask_result, date = new Date().toString() } = req.body;
+
+  insert({ url, node, type, ask_result, date }, (result, error) => {
+    if (error) {
+      res.send({ result: "error" });
+    } else {
+      res.send({ result: "succ" });
+    }
+  });
+});
+
+//#8. 저장된 내용을 제거 합니다.
+app.all("/data/remove", (req: express.Request, res: express.Response) => {
+  let { idx } = req.body;
+
+  remove(idx, (result, error) => {
+    console.log(result, error);
+    if (error) {
+      res.send({ result: "error" });
+    } else {
+      res.send({ result: "succ" });
+    }
+  });
+});
+
+//#9. 서버를 실행 합니다.
+app.listen(4885, () => {
+  console.log("실행중");
 });

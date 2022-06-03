@@ -1,10 +1,10 @@
 import { combineReducers } from 'redux';
 
-import INSERT_ROOMS from './Room';
+import CHANGE_DATA from './DataList';
 
 //2개의 리듀서를 담당 하는 메인 리듀서입니다.
 const root = combineReducers({
-  INSERT_ROOMS
+  CHANGE_DATA
 });
 
 export default root

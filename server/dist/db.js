@@ -21,13 +21,15 @@ function _init() {
         });
     });
 }
-function init() {
+function init(calback) {
     _init()
         .then((arg) => {
         db = new sqlite3.Database(db_path);
-        db.run(`CREATE TABLE IF NOT EXISTS ${table_name}(IDX INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT, DESC TEXT, DATE TEXT)`, (res, err) => {
+        db.run(`CREATE TABLE IF NOT EXISTS ${table_name}(idx INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT, node TEXT, type TEXT, ask_result TEXT, date TEXT)`, (res, err) => {
             if (err)
                 throw new Error("db create error!");
+            if (calback)
+                calback();
         });
     })
         .catch((err) => {
@@ -44,7 +46,7 @@ function select(calback) {
 exports.select = select;
 //등록 함수 입니다.
 function insert(param, calback) {
-    db.run(`INSERT INTO ${table_name}(NAME,DESC,DATE) VALUES('${param.NAME}','${param.DESC}','${param.DATE}')`, (result, error) => {
+    db.run(`INSERT INTO ${table_name}(url, node, type, ask_result, date ) VALUES('${param.url}','${param.node}','${param.type}','${param.ask_result}','${param.date}')`, (result, error) => {
         if (calback && calback instanceof Function)
             calback(result, error);
     });
@@ -52,15 +54,15 @@ function insert(param, calback) {
 exports.insert = insert;
 //수정 함수 입니다.
 function update(param, calback) {
-    db.run(`UPDATE ${table_name} SET NAME='${param.NAME}', DESC='${param.DESC}', DATE='${param.DATE}' WHERE IDX = '${param.IDX}'`, (result, error) => {
+    db.run(`UPDATE ${table_name} SET url='${param.url}', node='${param.node}', type='${param.type}', askresult='${param.ask_result}' WHERE idx = '${param.idx}'`, (result, error) => {
         if (calback && calback instanceof Function)
             calback(result, error);
     });
 }
 exports.update = update;
 //삭제 함수 입니다.
-function remove(param, calback) {
-    db.run(`DELETE FROM ${table_name} WHERE IDX = '${param.IDX}'`, (result, error) => {
+function remove(idx, calback) {
+    db.run(`DELETE FROM ${table_name} WHERE idx = '${idx}'`, (result, error) => {
         if (calback && calback instanceof Function)
             calback(result, error);
     });

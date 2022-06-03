@@ -15,60 +15,20 @@ app.engine("html", ejs.renderFile);
 app.set("view engine", "html");
 //#3. 데이터베이스를 설정 합니다.
 (0, db_1.default)();
-//#3. post 파라미터 파싱부분 입니다.
+//#4. post 파라미터 파싱부분 입니다.
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true,
 }));
-//#4. 화면 페이지로 이동시킵니다.
-app.all("/", (req, res) => {
-    res.render("index.html", { title: "Welcome" });
-});
-//#5. 간단하게 구현한 로그인 관련 내용 입니다.
-const db = new Map(); //데이터 베이스용 map 객체 입니다.
-app.all("/data/joinOrLogIn", (req, res) => {
-    let { id, password, join } = req.body;
-    id = id.toString();
-    if (join) {
-        //회원가입
-        if (!db.get(id)) {
-            db.set(id, password);
-            res.set(id, password.toString());
-            res.send({ result: "OK" });
-        }
-        else {
-            res.send({ result: "ID IS EXSIST" });
-        }
-    }
-    else {
-        //로그인
-        if (!db.get(id)) {
-            res.send({ result: "no member" });
-        }
-        else if (db.get(id) && db.get(id) != password) {
-            res.send({ result: "wrong password" });
-        }
-        else {
-            res.send({ result: "OK" });
-        }
-    }
-});
-//#8. 서버를 실행 합니다.
-app.listen(4885, () => {
-    console.log("실행중");
-});
-//URL 분석요청 입니다.
+//#5 URL 분석요청 입니다.
 app.all("/data/study", (req, res) => {
     let { url, node, type = "get" } = req.body;
-    console.log(url, node, type);
-    url = url.toString();
-    node = node.toString();
-    type = type.toString();
-    console.log(url, node, type);
+    // url = url.toString();
+    // node = node.toString();
+    // type = type.toString();
     axios_1.default
         .request({ url: url, method: type })
         .then((response) => {
-        //console.log(response.data);
         const $ = chery.load(response.data);
         if (node) {
             let text = "";
@@ -86,4 +46,37 @@ app.all("/data/study", (req, res) => {
         .catch((err) => {
         console.log(err, err.response);
     });
+});
+app.all("/data/getList", (req, res) => {
+    (0, db_1.select)((error, result) => {
+        res.send({ result: JSON.stringify(result) });
+    });
+});
+app.all("/data/saveResult", (req, res) => {
+    let { url, node, type, ask_result, date = new Date().toString(), } = req.body;
+    (0, db_1.insert)({ url, node, type, ask_result, date }, (result, error) => {
+        console.log(result, error);
+        if (error) {
+            res.send({ result: "error" });
+        }
+        else {
+            res.send({ result: "succ" });
+        }
+    });
+});
+app.all("/data/remove", (req, res) => {
+    let { idx } = req.body;
+    (0, db_1.remove)(idx, (result, error) => {
+        console.log(result, error);
+        if (error) {
+            res.send({ result: "error" });
+        }
+        else {
+            res.send({ result: "succ" });
+        }
+    });
+});
+//#8. 서버를 실행 합니다.
+app.listen(4885, () => {
+    console.log("실행중");
 });
